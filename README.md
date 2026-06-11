@@ -1,6 +1,11 @@
-# agentsd
+# claude-code-for-stream-deck
 
 Stream Deck plugin for managing [Claude Code](https://claude.ai/code) sessions. Monitor session state, approve or deny permission requests, and control agents from hardware buttons.
+
+> Fork of [paultyng/agentsd](https://github.com/paultyng/agentsd) with two changes:
+>
+> - Permission requests are held open for **24 hours** instead of 120 seconds before auto-denying, so pending requests survive long absences from your desk.
+> - Hook registration is documented as an explicit **manual step** (`npm run hooks:install`). Nothing touches `~/.claude/settings.json` unless you run that command yourself.
 
 <p align="center"><img src="docs/preview.png" alt="agentsd buttons on a Stream Deck" width="320"></p>
 
@@ -19,20 +24,40 @@ Claude Code HTTP hooks post events to a local server (`127.0.0.1:9200`). The plu
 Claude Code hooks → HTTP server (:9200) → SessionManager → Stream Deck UI
 ```
 
-`PermissionRequest` hooks hold the HTTP response open (up to 120 s) so you can approve or deny directly from a button press.
+`PermissionRequest` hooks hold the HTTP response open (up to 24 h) so you can approve or deny directly from a button press.
 
 ## Install
 
 ```sh
-git clone https://github.com/paultyng/agentsd.git && cd agentsd
+git clone https://github.com/msageha/claude-code-for-stream-deck.git && cd claude-code-for-stream-deck
 npm install
 npm install -g @elgato/cli   # one-time global; provides the `streamdeck` CLI used by `npm run link`/`dev`
 npm run build
 npm run link                 # register plugin with Stream Deck
-npm run hooks:install        # add Claude Code HTTP hooks to ~/.claude/settings.json
 ```
 
 After linking, restart the Stream Deck app. The actions appear under "Claude Code" in the action list.
+
+### Register Claude Code hooks (manual step)
+
+The plugin never modifies `~/.claude/settings.json` on its own. To start receiving
+events from Claude Code, register the HTTP hooks explicitly:
+
+```sh
+npm run hooks:install        # add Claude Code HTTP hooks to ~/.claude/settings.json
+```
+
+Each registered hook is an entry of the form
+`{ "type": "http", "url": "http://127.0.0.1:9200/hooks/<EventName>", "timeout": ... }`.
+The `PermissionRequest` hook uses `timeout: 86400` (24 hours) so pending requests
+survive long absences; all other hooks use short timeouts. Review the result by
+opening `~/.claude/settings.json` after running the command.
+
+To stop receiving events, remove the hooks just as explicitly:
+
+```sh
+npm run hooks:uninstall      # remove hooks from ~/.claude/settings.json
+```
 
 ### Uninstall
 
@@ -87,7 +112,7 @@ npm run debug:hooks  # interactive hook event probe
 
 - **Auto-foreground**: Permission requests and elicitations automatically bring their session to the active slot.
 - **Permission queue**: Multiple sessions can have pending permissions simultaneously. They're foregrounded in arrival order; resolving one auto-advances to the next.
-- **Permission timeout**: 120s. Auto-denies if no response.
+- **Permission timeout**: 24h. Auto-denies if no response.
 - **Stale pruning**: Idle or disconnected sessions with no activity for 60s are automatically removed.
 - **Auto-create sessions**: If a hook event arrives for an unknown session (e.g., plugin restarted mid-session), the session is created as IDLE.
 - **Model backfill**: If the hook payload doesn't include a model, it's extracted from the session transcript.
@@ -98,7 +123,7 @@ The plugin registers hooks for all Claude Code lifecycle events:
 
 `SessionStart`, `SessionEnd`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `Stop`, `StopFailure`, `PermissionRequest`, `Notification`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `Elicitation`, `ElicitationResult`
 
-Each event is posted to `http://localhost:9200/hooks/{EventName}`. The `hooks:install` script manages registration in `~/.claude/settings.json`.
+Each event is posted to `http://localhost:9200/hooks/{EventName}`. Registration in `~/.claude/settings.json` is managed only by the manual `npm run hooks:install` / `npm run hooks:uninstall` commands.
 
 ## Acknowledgments
 

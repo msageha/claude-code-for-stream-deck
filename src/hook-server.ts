@@ -14,14 +14,14 @@ const VALID_EVENTS = new Set<HookEventName>([
 ]);
 
 /** Default time to hold a PermissionRequest response open before auto-denying. */
-const PERMISSION_TIMEOUT_MS = 120_000;
+const PERMISSION_TIMEOUT_MS = 86_400_000;
 /** Maximum request body size (1 MB). */
 const MAX_BODY_BYTES = 1_024 * 1_024;
 
 export interface HookServerOptions {
   /** Expose GET /debug/sessions returning serialized session state. Defaults to env AGENTSD_DEBUG="1". */
   debugEnabled?: boolean;
-  /** PermissionRequest hold-open timeout in ms. Defaults to 120s. */
+  /** PermissionRequest hold-open timeout in ms. Defaults to 24h. */
   permissionTimeoutMs?: number;
 }
 

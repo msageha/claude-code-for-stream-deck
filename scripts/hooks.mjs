@@ -14,7 +14,7 @@ const HOOK_EVENTS = [
   { name: "PostToolUseFailure", timeout: 5 },
   { name: "Stop", timeout: 5 },
   { name: "StopFailure", timeout: 5 },
-  { name: "PermissionRequest", timeout: 120 },
+  { name: "PermissionRequest", timeout: 86400 },
   { name: "Notification", timeout: 5 },
   { name: "SubagentStart", timeout: 5 },
   { name: "SubagentStop", timeout: 5 },

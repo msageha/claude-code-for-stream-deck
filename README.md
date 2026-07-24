@@ -70,7 +70,7 @@ npm run unlink               # unregister plugin
 
 | Env var | Default | Effect |
 |---|---|---|
-| `AGENTSD_DEBUG` | unset | When `1`, the hook server exposes `GET /debug/sessions` returning a JSON snapshot of every tracked session. Used by the test suite; safe to enable locally for diagnostics. |
+| `AGENTSD_DEBUG` | unset | When `1`, the hook server exposes `GET /debug/sessions` returning a JSON snapshot of every tracked session (cwd, pid, model, current tool). Used by the test suite. The endpoint is unauthenticated, so any other process on the same machine can read it while enabled — leave it unset except for local diagnostics. |
 
 ## Development
 

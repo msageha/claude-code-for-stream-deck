@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, rename } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -34,7 +34,11 @@ async function readSettings() {
 }
 
 async function writeSettings(settings) {
-  await writeFile(SETTINGS_PATH, JSON.stringify(settings, null, 2) + "\n", "utf-8");
+  // Write to a temp file then rename, so a crash mid-write can't corrupt the
+  // user's settings.json. rename within the same directory is atomic.
+  const tmpPath = `${SETTINGS_PATH}.tmp`;
+  await writeFile(tmpPath, JSON.stringify(settings, null, 2) + "\n", "utf-8");
+  await rename(tmpPath, SETTINGS_PATH);
 }
 
 const isOurs = (h) => h.type === "http" && h.url.startsWith(BASE_URL);

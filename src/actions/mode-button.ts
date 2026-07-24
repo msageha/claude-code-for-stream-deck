@@ -10,14 +10,20 @@ const MODE_LABELS: Record<string, string> = {
   bypassPermissions: "Bypass",
 };
 
-/** Shorten model ID for button display, e.g. "claude-sonnet-4-6" → "Sonnet 4.6" */
+/**
+ * Shorten a model ID for button display. Handles both dotted-minor names
+ * ("claude-sonnet-4-6" → "Sonnet 4.6") and major-only names
+ * ("claude-fable-5" → "Fable 5").
+ */
 function shortenModel(model: string): string {
-  const m = model.match(/claude-(\w+)-(\d+)-(\d+)/);
+  const cleaned = model.replace(/^claude-/, "");
+  const m = cleaned.match(/^([a-z]+)-(\d+)(?:-(\d+))?/);
   if (m) {
     const name = m[1].charAt(0).toUpperCase() + m[1].slice(1);
-    return `${name} ${m[2]}.${m[3]}`;
+    const version = m[3] ? `${m[2]}.${m[3]}` : m[2];
+    return `${name} ${version}`;
   }
-  return model.replace(/^claude-/, "").slice(0, 12);
+  return cleaned.slice(0, 12);
 }
 
 @action({ UUID: "com.paultyng.agentsd.mode" })

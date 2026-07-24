@@ -9,11 +9,17 @@ import { extractModel } from "./util/transcript";
 const STALE_MS = 60 * 1000;
 const STALE_PRUNE_STATES = new Set([State.IDLE, State.DISCONNECTED]);
 const PRUNE_INTERVAL_MS = 60 * 1000;
+/**
+ * Upper bound on concurrently tracked sessions. Real usage is a handful; this
+ * caps unbounded growth if a flood of unique session_ids ever arrives.
+ */
+const MAX_SESSIONS = 100;
 
 export class SessionManager extends EventEmitter {
   private readonly sessions = new Map<string, SessionState>();
   private pruneTimer: ReturnType<typeof setInterval> | null = null;
-  private _activeIndex = 0;
+  /** ID of the foregrounded session, or null to fall back to the first session. */
+  private _activeId: string | null = null;
   /** Session IDs with pending permissions, ordered by arrival. */
   private permissionQueue: string[] = [];
 
@@ -36,17 +42,23 @@ export class SessionManager extends EventEmitter {
       this.clearPendingPermission(session);
     }
     this.sessions.clear();
+    this._activeId = null;
   }
 
   get activeSession(): SessionState | undefined {
-    const ids = [...this.sessions.keys()];
-    if (ids.length === 0) return undefined;
-    this._activeIndex = Math.min(this._activeIndex, ids.length - 1);
-    return this.sessions.get(ids[this._activeIndex]);
+    if (this._activeId && this.sessions.has(this._activeId)) {
+      return this.sessions.get(this._activeId);
+    }
+    // Active session gone (or never set): fall back to the first session.
+    const first = this.sessions.keys().next();
+    this._activeId = first.done ? null : first.value;
+    return this._activeId ? this.sessions.get(this._activeId) : undefined;
   }
 
   get activeIndex(): number {
-    return this._activeIndex;
+    if (!this._activeId) return 0;
+    const idx = [...this.sessions.keys()].indexOf(this._activeId);
+    return idx < 0 ? 0 : idx;
   }
 
   get sessionCount(): number {
@@ -75,10 +87,14 @@ export class SessionManager extends EventEmitter {
   }
 
   cycleSession(direction: number): SessionState | undefined {
-    const count = this.sessions.size;
+    const ids = [...this.sessions.keys()];
+    const count = ids.length;
     if (count === 0) return undefined;
-    this._activeIndex = ((this._activeIndex + direction) % count + count) % count;
-    const session = this.activeSession;
+    const current = this._activeId ? ids.indexOf(this._activeId) : 0;
+    const base = current < 0 ? 0 : current;
+    const nextIndex = ((base + direction) % count + count) % count;
+    this._activeId = ids[nextIndex];
+    const session = this.sessions.get(this._activeId);
     this.emit("activeSessionChanged", session);
     return session;
   }
@@ -90,6 +106,7 @@ export class SessionManager extends EventEmitter {
     let session = this.sessions.get(id);
 
     if (!session) {
+      this.evictIfFull();
       // Auto-create session on any event (handles missed SessionStart or plugin restart).
       // Starts as IDLE (not DISCONNECTED) so subsequent tool events can transition normally.
       session = {
@@ -121,6 +138,7 @@ export class SessionManager extends EventEmitter {
 
     session.lastActivity = Date.now();
     if (payload.model) session.model = payload.model;
+    if (payload.permission_mode) session.permissionMode = payload.permission_mode;
 
     // Apply state transition
     const prevState = session.state;
@@ -195,7 +213,6 @@ export class SessionManager extends EventEmitter {
         // Emit before deleting so listeners can still read the session
         this.emit("sessionUpdated", session, event);
         this.sessions.delete(id);
-        this.clampActiveIndex();
         return session;
     }
 
@@ -226,10 +243,9 @@ export class SessionManager extends EventEmitter {
 
   /** Bring a session to the foreground by ID. */
   focusSession(sessionId: string): void {
-    const ids = [...this.sessions.keys()];
-    const idx = ids.indexOf(sessionId);
-    if (idx >= 0 && idx !== this._activeIndex) {
-      this._activeIndex = idx;
+    if (!this.sessions.has(sessionId)) return;
+    if (this._activeId !== sessionId) {
+      this._activeId = sessionId;
       this.emit("activeSessionChanged", this.activeSession);
     }
   }
@@ -279,7 +295,9 @@ export class SessionManager extends EventEmitter {
             behavior: "allow",
             updatedPermissions: [{
               type: "addRules",
-              rules: [{ toolName: toolName ?? "*", ruleContent: "*" }],
+              // Omit ruleContent so the rule matches the tool as a whole; a
+              // literal "*" would be treated as an argument pattern by some tools.
+              rules: [{ toolName: toolName ?? "*" }],
               behavior: "allow",
               destination: "session",
             }],
@@ -353,13 +371,24 @@ export class SessionManager extends EventEmitter {
     }
   }
 
-  private clampActiveIndex(): void {
-    const count = this.sessions.size;
-    if (count === 0) {
-      this._activeIndex = 0;
-    } else {
-      this._activeIndex = Math.min(this._activeIndex, count - 1);
+  /**
+   * Evict a session when at capacity to bound memory. Prefers the oldest
+   * IDLE/DISCONNECTED session; falls back to the oldest overall.
+   */
+  private evictIfFull(): void {
+    if (this.sessions.size < MAX_SESSIONS) return;
+    let victim: string | undefined;
+    for (const [id, s] of this.sessions) {
+      if (STALE_PRUNE_STATES.has(s.state)) {
+        victim = id;
+        break;
+      }
     }
+    if (!victim) victim = this.sessions.keys().next().value;
+    if (!victim) return;
+    const session = this.sessions.get(victim);
+    if (session) this.clearPendingPermission(session);
+    this.sessions.delete(victim);
   }
 
   private pruneStale(): void {
@@ -376,9 +405,6 @@ export class SessionManager extends EventEmitter {
       this.clearPendingPermission(session);
       this.emit("sessionUpdated", { ...session, state: State.DISCONNECTED }, "SessionEnd");
       this.sessions.delete(id);
-    }
-    if (staleIds.length > 0) {
-      this.clampActiveIndex();
     }
   }
 }

@@ -94,6 +94,18 @@ describe("SessionManager state transitions", () => {
     expect(updates.at(-1)).toBe("SessionEnd");
   });
 
+  it("falls back to a remaining session after the foregrounded one ends", () => {
+    m = new SessionManager();
+    m.handleEvent("SessionStart", { session_id: SESSION_A });
+    m.handleEvent("SessionStart", { session_id: SESSION_B });
+    m.focusSession(SESSION_B);
+    expect(m.activeSession?.id).toBe(SESSION_B);
+
+    m.handleEvent("SessionEnd", { session_id: SESSION_B });
+    // Active session should fall back to the survivor, not become undefined.
+    expect(m.activeSession?.id).toBe(SESSION_A);
+  });
+
   it("Elicitation auto-foregrounds the session", () => {
     m = new SessionManager();
     m.handleEvent("SessionStart", { session_id: SESSION_A });
@@ -122,6 +134,15 @@ describe("SessionManager state transitions", () => {
     expect(m.activeSession?.state).toBe(State.PROCESSING);
     expect(m.activeSession?.lastError).toBe("exit 1");
     expect(m.activeSession?.currentTool).toBeNull();
+  });
+
+  it("updates permissionMode when a later event carries a new permission_mode", () => {
+    m = new SessionManager();
+    m.handleEvent("SessionStart", { session_id: SESSION_A, permission_mode: "default" });
+    expect(m.activeSession?.permissionMode).toBe("default");
+
+    m.handleEvent("PreToolUse", { session_id: SESSION_A, tool_name: "Edit", permission_mode: "acceptEdits" });
+    expect(m.activeSession?.permissionMode).toBe("acceptEdits");
   });
 });
 
@@ -271,6 +292,21 @@ describe("SessionManager session cycling and PID", () => {
     expect(m.interruptActiveSession()).toBe(true);
     expect(killSpy).toHaveBeenCalledWith(12345, "SIGINT");
     killSpy.mockRestore();
+  });
+});
+
+describe("SessionManager capacity", () => {
+  let m: SessionManager;
+  afterEach(() => m?.stop());
+
+  it("caps the number of tracked sessions", () => {
+    m = new SessionManager();
+    // Create well beyond the internal MAX_SESSIONS (100) cap.
+    for (let i = 0; i < 250; i++) {
+      m.handleEvent("SessionStart", { session_id: `sess-${i}` });
+    }
+    expect(m.sessionCount).toBeLessThanOrEqual(100);
+    expect(m.sessionCount).toBeGreaterThan(0);
   });
 });
 

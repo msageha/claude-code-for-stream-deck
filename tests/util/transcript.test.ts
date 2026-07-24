@@ -64,4 +64,20 @@ describe("extractModel", () => {
     ]);
     expect(await extractModel(path)).toBeNull();
   });
+
+  it("finds the model in the tail of a very large transcript without reading it all", async () => {
+    workDir = await mkdtemp(join(tmpdir(), "transcript-"));
+    const path = join(workDir, "transcript.jsonl");
+    // ~1.5 MB of padding lines followed by the real assistant model line,
+    // exceeding the 256 KB tail window so only the end is read.
+    const padding = Array.from({ length: 3000 }, (_, i) =>
+      JSON.stringify({ type: "user", message: { role: "user", content: "x".repeat(500) + i } }),
+    );
+    const lines = [
+      ...padding,
+      JSON.stringify({ type: "assistant", message: { role: "assistant", model: "claude-opus-4-8", content: "done" } }),
+    ];
+    await writeFile(path, lines.join("\n") + "\n");
+    expect(await extractModel(path)).toBe("claude-opus-4-8");
+  });
 });

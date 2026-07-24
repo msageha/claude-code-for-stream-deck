@@ -37,8 +37,6 @@ export interface HookPayload {
   tool_name?: string;
   /** Error message for PostToolUseFailure */
   error?: string;
-  /** Notification text */
-  message?: string;
   /** Model identifier (present on SessionStart) */
   model?: string;
   /** Path to the session transcript JSONL file */

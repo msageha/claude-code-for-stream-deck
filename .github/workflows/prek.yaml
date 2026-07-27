@@ -1,0 +1,46 @@
+name: prek
+
+# ci.yml から reusable workflow として呼び出される。
+# push / pull_request / workflow_dispatch のトリガーは ci.yml 側が持つ。
+on:
+  workflow_call:
+    inputs:
+      fail-fast:
+        description: "失敗時に呼び出し元の run 全体をキャンセルして他の並列チェックを止める"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+  # fail-fast step (gh run cancel) に必要。呼び出し元でも同じ権限を付与すること
+  # (called workflow の GITHUB_TOKEN は caller の権限を超えられない)
+  actions: write
+
+jobs:
+  prek:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      # 注意: org の Actions 許可設定 (allowed_actions: selected) で
+      # jdx/mise-action@* を patterns_allowed に許可している必要がある。
+      - name: Install mise
+        uses: jdx/mise-action@dad1bfd3df957f44999b559dd69dc1671cb4e9ea # v4.2.1
+        with:
+          cache: true
+
+      - name: Run prek
+        run: mise exec -- prek run --all-files
+
+      # fail-fast: run 全体をキャンセルして並列で走る他のチェックを止める。
+      # run と各 job の conclusion は cancelled になるが、失敗した step は failure として記録に残る。
+      - name: Cancel the entire run on failure
+        if: failure() && inputs.fail-fast
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run cancel "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY"

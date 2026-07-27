@@ -14,7 +14,63 @@ dprint = "0.55.2"
 # _.file = ".env"
 
 [hooks]
-postinstall = "prek install"
+# `mise install` の直後に一度だけ実行される。ここでの「hooks」は mise 自身のライフサイクル
+# フックで、以下の 2 つとは別物:
+#   - git commit hook (.git/hooks/pre-commit, prek install が登録する)
+#   - Claude Code の HTTP hooks (~/.claude/settings.json, `mise run hooks:install` が登録する)
+postinstall = """
+npm install
+prek install
+"""
+
+[tasks.build]
+description = "rollup build → com.paultyng.agentsd.sdPlugin/bin/plugin.js"
+run = "npm run build"
+
+[tasks.watch]
+description = "rollup watch mode"
+run = "npm run watch"
+
+[tasks.dev]
+description = "Stream Deck dev mode (hot reload)"
+run = "npm run dev"
+
+[tasks.link]
+description = "build, then register the plugin with the Stream Deck app"
+depends = ["build"]
+run = "npm run link"
+
+[tasks.unlink]
+description = "unregister the plugin from the Stream Deck app"
+run = "npm run unlink"
+
+[tasks."hooks:install"]
+description = "register Claude Code HTTP hooks in ~/.claude/settings.json (not a git hook)"
+run = "npm run hooks:install"
+
+[tasks."hooks:uninstall"]
+description = "remove Claude Code HTTP hooks from ~/.claude/settings.json"
+run = "npm run hooks:uninstall"
+
+[tasks."debug:hooks"]
+description = "interactive Claude Code hook event probe"
+run = "npm run debug:hooks"
+
+[tasks.test]
+description = "run unit/integration/e2e tests (vitest)"
+run = "npm test"
+
+[tasks."test:watch"]
+description = "vitest watch mode"
+run = "npm run test:watch"
+
+[tasks."test:coverage"]
+description = "vitest run with coverage report"
+run = "npm run test:coverage"
+
+[tasks.typecheck]
+description = "tsc --noEmit"
+run = "npm run typecheck"
 
 [settings]
 lockfile = true

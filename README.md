@@ -13,7 +13,7 @@ Stream Deck plugin for managing [Claude Code](https://claude.ai/code) sessions. 
 
 - **macOS 13+** (Windows support tracked separately; see issue for details)
 - **Stream Deck app 6.6+** plus a [Stream Deck](https://www.elgato.com/stream-deck) device
-- **Node.js 20+**
+- **Node.js 20+** (pinned via [mise](https://mise.jdx.dev/)'s `mise.toml`, or install it yourself)
 - **Claude Code** with [HTTP hooks](https://code.claude.com/docs/en/hooks-guide) support
 
 ## How it works
@@ -30,34 +30,20 @@ Claude Code hooks → HTTP server (:9200) → SessionManager → Stream Deck UI
 
 ```sh
 git clone https://github.com/msageha/claude-code-for-stream-deck.git && cd claude-code-for-stream-deck
-npm install
-npm install -g @elgato/cli   # one-time global; provides the `streamdeck` CLI used by `npm run link`/`dev`
-npm run build
-npm run link                 # register plugin with Stream Deck
+mise install            # provisions Node.js, installs npm deps, registers git hooks
+mise run link           # builds the plugin, then registers it with the Stream Deck app
+mise run hooks:install  # add Claude Code HTTP hooks to ~/.claude/settings.json
 ```
+
+No mise? Every `mise run <name>` above just wraps the matching `npm run <name>` script (see `mise tasks`
+for the full list) — run `npm install && npm run build && npm run link && npm run hooks:install` instead.
+`@elgato/cli` (the `streamdeck` CLI) is already a devDependency, so no global install is needed.
 
 After linking, restart the Stream Deck app. The actions appear under "Claude Code" in the action list.
-
-### Register Claude Code hooks (manual step)
-
-The plugin never modifies `~/.claude/settings.json` on its own. To start receiving
-events from Claude Code, register the HTTP hooks explicitly:
-
-```sh
-npm run hooks:install        # add Claude Code HTTP hooks to ~/.claude/settings.json
-```
-
-Each registered hook is an entry of the form
-`{ "type": "http", "url": "http://127.0.0.1:9200/hooks/<EventName>", "timeout": ... }`.
-The `PermissionRequest` hook uses `timeout: 86400` (24 hours) so pending requests
-survive long absences; all other hooks use short timeouts. Review the result by
-opening `~/.claude/settings.json` after running the command.
-
-To stop receiving events, remove the hooks just as explicitly:
-
-```sh
-npm run hooks:uninstall      # remove hooks from ~/.claude/settings.json
-```
+The plugin never modifies `~/.claude/settings.json` on its own — `hooks:install` above is what registers
+the HTTP hooks (`{ "type": "http", "url": "http://127.0.0.1:9200/hooks/<EventName>", "timeout": ... }`);
+`PermissionRequest` uses `timeout: 86400` (24h) so pending requests survive long absences, others use
+short timeouts.
 
 ### Uninstall
 
@@ -123,7 +109,7 @@ The plugin registers hooks for all Claude Code lifecycle events:
 
 `SessionStart`, `SessionEnd`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `Stop`, `StopFailure`, `PermissionRequest`, `Notification`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `Elicitation`, `ElicitationResult`
 
-Each event is posted to `http://localhost:9200/hooks/{EventName}`. Registration in `~/.claude/settings.json` is managed only by the manual `npm run hooks:install` / `npm run hooks:uninstall` commands.
+Each event is posted to `http://localhost:9200/hooks/{EventName}`.
 
 ## Acknowledgments
 

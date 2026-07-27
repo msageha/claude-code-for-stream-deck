@@ -36,19 +36,9 @@ This repo pins its toolchain (Node.js, [prek](https://github.com/j178/prek), act
 [mise](https://mise.jdx.dev/). Every `npm run <script>` in `package.json` has a matching `mise run <name>`
 task (see `mise tasks` for the full list) — use whichever you prefer.
 
-**With mise:**
-
 ```sh
 mise install       # provisions Node.js, then runs `npm install` and registers git hooks (postinstall hook)
 mise run link      # builds the plugin, then registers it with the Stream Deck app
-```
-
-**Without mise:**
-
-```sh
-npm install
-npm run build
-npm run link                 # register plugin with Stream Deck
 ```
 
 `@elgato/cli` (providing the `streamdeck` CLI that `link`/`dev` shell out to) is a devDependency, so

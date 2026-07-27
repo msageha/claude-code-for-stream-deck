@@ -15,7 +15,7 @@ export class AlwaysAllowButton extends ManagedAction {
     const session = this.manager?.activeSession;
     const awaiting = session?.state === State.AWAITING_PERMISSION;
     const icon = iconButton(
-      awaiting ? "#d29922" : "#555555",
+      awaiting ? "#1a7f37" : "#555555",
       `<path d="M32 72 L48 88 L80 56" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
        <path d="M64 72 L80 88 L112 56" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
     );

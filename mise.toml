@@ -1,0 +1,20 @@
+# ツールのバージョンは Renovate (mise manager) が bump する。latest 指定にしない。
+# checksum の再解決は mise-lock.yaml (週次) が行う。
+[tools]
+node = "26.5.0"
+prek = "0.4.11"
+actionlint = "1.7.12"
+dprint = "0.55.2"
+
+[env]
+# `mise.local.toml` (git 管理外) を併置すると、ローカルだけの値で上書きできる。
+#
+# 例:
+# MY_VAR = "value"
+# _.file = ".env"
+
+[hooks]
+postinstall = "prek install"
+
+[settings]
+lockfile = true

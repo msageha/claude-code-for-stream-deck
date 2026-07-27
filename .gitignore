@@ -5,3 +5,4 @@ com.paultyng.agentsd.sdPlugin/bin/
 *.js.map
 memory/
 com.paultyng.agentsd.sdPlugin/logs/
+mise.local.toml

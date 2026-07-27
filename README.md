@@ -68,9 +68,9 @@ npm run unlink               # unregister plugin
 
 ## Configuration
 
-| Env var | Default | Effect |
-|---|---|---|
-| `AGENTSD_DEBUG` | unset | When `1`, the hook server exposes `GET /debug/sessions` returning a JSON snapshot of every tracked session (cwd, pid, model, current tool). Used by the test suite. The endpoint is unauthenticated, so any other process on the same machine can read it while enabled — leave it unset except for local diagnostics. |
+| Env var         | Default | Effect                                                                                                                                                                                                                                                                                                                 |
+| --------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AGENTSD_DEBUG` | unset   | When `1`, the hook server exposes `GET /debug/sessions` returning a JSON snapshot of every tracked session (cwd, pid, model, current tool). Used by the test suite. The endpoint is unauthenticated, so any other process on the same machine can read it while enabled — leave it unset except for local diagnostics. |
 
 ## Development
 
@@ -86,27 +86,27 @@ npm run debug:hooks  # interactive hook event probe
 
 ## Actions
 
-| Action | Type | Description |
-|--------|------|-------------|
-| **Session** | Button | Active session name, color-coded by state. Press to cycle sessions. Shows `(N/M)` counter. |
-| **Session Dial** | Encoder | Rotate to cycle sessions. Same info as Session button in dial feedback. |
-| **Status** | Button | Current state (`Working`, `Permission?`, `Question?`, `Idle`, `Error`), tool name, active work count (subagents + tasks). |
-| **Mode** | Button | Permission mode (`Default`, `Plan`, `Auto`, etc.) and model name. |
-| **Approve** | Button | Approve pending permission. Green when active, gray otherwise. |
-| **Always Allow** | Button | Approve and add session-scoped allow rule for the tool. Gold when active, gray otherwise. |
-| **Deny** | Button | Deny pending permission. Red when active, gray otherwise. |
-| **Stop** | Button | Send Ctrl+C interrupt to frontmost Ghostty terminal. Red when a session is active. |
-| **Focus** | Button | Bring Ghostty (or Claude Desktop) to foreground. |
+| Action           | Type    | Description                                                                                                               |
+| ---------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Session**      | Button  | Active session name, color-coded by state. Press to cycle sessions. Shows `(N/M)` counter.                                |
+| **Session Dial** | Encoder | Rotate to cycle sessions. Same info as Session button in dial feedback.                                                   |
+| **Status**       | Button  | Current state (`Working`, `Permission?`, `Question?`, `Idle`, `Error`), tool name, active work count (subagents + tasks). |
+| **Mode**         | Button  | Permission mode (`Default`, `Plan`, `Auto`, etc.) and model name.                                                         |
+| **Approve**      | Button  | Approve pending permission. Green when active, gray otherwise.                                                            |
+| **Always Allow** | Button  | Approve and add session-scoped allow rule for the tool. Gold when active, gray otherwise.                                 |
+| **Deny**         | Button  | Deny pending permission. Red when active, gray otherwise.                                                                 |
+| **Stop**         | Button  | Send Ctrl+C interrupt to frontmost Ghostty terminal. Red when a session is active.                                        |
+| **Focus**        | Button  | Bring Ghostty (or Claude Desktop) to foreground.                                                                          |
 
 ## Session states
 
-| State | Color | Meaning |
-|-------|-------|---------|
-| `IDLE` | Green | Session connected, waiting for input |
-| `PROCESSING` | Blue | Tool execution in progress |
-| `AWAITING_PERMISSION` | Gold | Permission prompt — approve or deny from Stream Deck |
-| `AWAITING_ELICITATION` | Purple | Claude is asking a question |
-| `DISCONNECTED` | Gray | No active session |
+| State                  | Color  | Meaning                                              |
+| ---------------------- | ------ | ---------------------------------------------------- |
+| `IDLE`                 | Green  | Session connected, waiting for input                 |
+| `PROCESSING`           | Blue   | Tool execution in progress                           |
+| `AWAITING_PERMISSION`  | Gold   | Permission prompt — approve or deny from Stream Deck |
+| `AWAITING_ELICITATION` | Purple | Claude is asking a question                          |
+| `DISCONNECTED`         | Gray   | No active session                                    |
 
 ## Key behaviors
 

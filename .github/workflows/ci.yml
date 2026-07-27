@@ -4,6 +4,14 @@ on:
   push:
     branches: [main]
   pull_request:
+  # mise-lock.yaml が GITHUB_TOKEN で push / 作成する PR には workflow run が自動発火しないため、
+  # PR head ブランチへ明示的に dispatch できるようにする
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # prek / gitleaks の fail-fast (run 全体のキャンセル) に必要
+  actions: write
 
 # Cancel in-flight runs on the same ref when a new commit lands.
 concurrency:
@@ -11,6 +19,16 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  prek:
+    uses: ./.github/workflows/prek.yaml
+    with:
+      fail-fast: true
+
+  gitleaks:
+    uses: ./.github/workflows/gitleaks.yaml
+    with:
+      fail-fast: true
+
   test:
     name: test (${{ matrix.os }})
     strategy:
@@ -29,7 +47,7 @@ jobs:
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: '22'
+          node-version-file: ".node-version"
           cache: npm
 
       # npm install (not ci): some transitive deps from rollup's native

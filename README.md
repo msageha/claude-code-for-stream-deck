@@ -13,7 +13,7 @@ Stream Deck plugin for managing [Claude Code](https://claude.ai/code) sessions. 
 
 - **macOS 13+** (Windows support tracked separately; see issue for details)
 - **Stream Deck app 6.6+** plus a [Stream Deck](https://www.elgato.com/stream-deck) device
-- **Node.js 20+** — pinned exactly via [mise](https://mise.jdx.dev/) (`mise.toml`) if you use it, otherwise install it yourself
+- **Node.js 20+** (pinned via [mise](https://mise.jdx.dev/)'s `mise.toml`, or install it yourself)
 - **Claude Code** with [HTTP hooks](https://code.claude.com/docs/en/hooks-guide) support
 
 ## How it works
@@ -30,57 +30,26 @@ Claude Code hooks → HTTP server (:9200) → SessionManager → Stream Deck UI
 
 ```sh
 git clone https://github.com/msageha/claude-code-for-stream-deck.git && cd claude-code-for-stream-deck
+mise install            # provisions Node.js, installs npm deps, registers git hooks
+mise run link           # builds the plugin, then registers it with the Stream Deck app
+mise run hooks:install  # add Claude Code HTTP hooks to ~/.claude/settings.json
 ```
 
-This repo pins its toolchain (Node.js, [prek](https://github.com/j178/prek), actionlint, dprint) via
-[mise](https://mise.jdx.dev/). Every `npm run <script>` in `package.json` has a matching `mise run <name>`
-task (see `mise tasks` for the full list) — use whichever you prefer.
-
-```sh
-mise install       # provisions Node.js, then runs `npm install` and registers git hooks (postinstall hook)
-mise run link      # builds the plugin, then registers it with the Stream Deck app
-```
-
-`@elgato/cli` (providing the `streamdeck` CLI that `link`/`dev` shell out to) is a devDependency, so
-`npm install` alone makes it available under `node_modules/.bin` — no separate global install needed.
+No mise? Every `mise run <name>` above just wraps the matching `npm run <name>` script (see `mise tasks`
+for the full list) — run `npm install && npm run build && npm run link && npm run hooks:install` instead.
+`@elgato/cli` (the `streamdeck` CLI) is already a devDependency, so no global install is needed.
 
 After linking, restart the Stream Deck app. The actions appear under "Claude Code" in the action list.
-
-### Register Claude Code hooks (manual step)
-
-The plugin never modifies `~/.claude/settings.json` on its own. To start receiving
-events from Claude Code, register the HTTP hooks explicitly:
-
-```sh
-npm run hooks:install        # add Claude Code HTTP hooks to ~/.claude/settings.json
-# or: mise run hooks:install
-```
-
-Each registered hook is an entry of the form
-`{ "type": "http", "url": "http://127.0.0.1:9200/hooks/<EventName>", "timeout": ... }`.
-The `PermissionRequest` hook uses `timeout: 86400` (24 hours) so pending requests
-survive long absences; all other hooks use short timeouts. Review the result by
-opening `~/.claude/settings.json` after running the command.
-
-To stop receiving events, remove the hooks just as explicitly:
-
-```sh
-npm run hooks:uninstall      # remove hooks from ~/.claude/settings.json
-# or: mise run hooks:uninstall
-```
-
-> **Not the same as this repo's git hooks.** `.pre-commit-config.yaml` defines commit-time git hooks
-> (formatting/linting), registered into `.git/hooks/pre-commit` by `prek install` — that's a completely
-> separate mechanism from the Claude Code HTTP hooks above, despite the shared name. `prek install` runs
-> automatically as part of `mise install` (see `mise.toml`'s `postinstall` hook); it's unrelated to
-> `npm run hooks:install`/`hooks:uninstall`, which only ever touch `~/.claude/settings.json`.
+The plugin never modifies `~/.claude/settings.json` on its own — `hooks:install` above is what registers
+the HTTP hooks (`{ "type": "http", "url": "http://127.0.0.1:9200/hooks/<EventName>", "timeout": ... }`);
+`PermissionRequest` uses `timeout: 86400` (24h) so pending requests survive long absences, others use
+short timeouts.
 
 ### Uninstall
 
 ```sh
 npm run hooks:uninstall      # remove hooks from ~/.claude/settings.json
 npm run unlink               # unregister plugin
-# or: mise run hooks:uninstall && mise run unlink
 ```
 
 ## Configuration
@@ -97,11 +66,9 @@ npm run dev          # Stream Deck dev mode (hot reload)
 npm run debug:hooks  # interactive hook event probe
 ```
 
-Or the mise equivalents: `mise run watch`, `mise run dev`, `mise run debug:hooks`.
-
 ## Testing
 
-`npm test` (or `mise run test`) runs unit, integration, and end-to-end layers. E2E uses [testagent](https://github.com/paultyng/testagent), a deterministic fake of the Claude Code CLI (no model or API key); E2E tests skip when it's not on PATH. `npm run test:coverage` (or `mise run test:coverage`) writes a report under `coverage/`. CI runs everything on Linux, macOS, and Windows.
+`npm test` runs unit, integration, and end-to-end layers. E2E uses [testagent](https://github.com/paultyng/testagent), a deterministic fake of the Claude Code CLI (no model or API key); E2E tests skip when it's not on PATH. `npm run test:coverage` writes a report under `coverage/`. CI runs everything on Linux, macOS, and Windows.
 
 ## Actions
 
@@ -142,7 +109,7 @@ The plugin registers hooks for all Claude Code lifecycle events:
 
 `SessionStart`, `SessionEnd`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `Stop`, `StopFailure`, `PermissionRequest`, `Notification`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `Elicitation`, `ElicitationResult`
 
-Each event is posted to `http://localhost:9200/hooks/{EventName}`. Registration in `~/.claude/settings.json` is managed only by the manual `npm run hooks:install` / `npm run hooks:uninstall` commands.
+Each event is posted to `http://localhost:9200/hooks/{EventName}`.
 
 ## Acknowledgments
 

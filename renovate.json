@@ -5,7 +5,7 @@
     "helpers:pinGitHubActionDigests"
   ],
   "timezone": "Asia/Tokyo",
-  "schedule": ["* 5 * * *"],
+  "schedule": ["before 9am on monday"],
   "separateMajorMinor": true,
   "lockFileMaintenance": {
     "enabled": true

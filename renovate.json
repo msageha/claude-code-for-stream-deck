@@ -26,6 +26,13 @@
       "matchUpdateTypes": ["patch", "minor"],
       "automerge": true,
       "automergeType": "pr"
+    },
+    {
+      "description": "lock file maintenance には release timestamp が無く、minimumReleaseAge の判定が常に pending になる。7 日の制約は .npmrc の min-release-age で守る。mise.lock の更新は mise.toml で固定した版の配布物の情報に限られる。CI が green なら自動 merge する",
+      "matchUpdateTypes": ["lockFileMaintenance"],
+      "minimumReleaseAge": null,
+      "automerge": true,
+      "automergeType": "pr"
     }
   ],
   "customManagers": [

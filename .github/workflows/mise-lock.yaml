@@ -62,6 +62,8 @@ jobs:
       # Renovate 等が mise.toml を変更した既存 PR には、
       # 同じブランチに直接 commit して mise.lock を追従させる。
       # fork からの PR は GITHUB_TOKEN で push できないためスキップする。
+      # この commit で Renovate が PR を「編集された」とみなして rebase と自動 merge をやめないよう、
+      # renovate.json の gitIgnoredAuthors に commit の author を登録している
       - name: Push mise.lock update to the pull request branch
         if: steps.diff.outputs.changed == 'true' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         env:

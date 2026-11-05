@@ -14,6 +14,7 @@
     "enabled": true
   },
   "minimumReleaseAge": "7 days",
+  "gitIgnoredAuthors": ["github-actions[bot]@users.noreply.github.com"],
   "packageRules": [
     {
       "description": "PR の乱立を防ぐため、major 以外 (minor/patch/pin/digest) の更新は manager・エコシステム横断で 1 つの PR に集約する。major は separateMajorMinor により分離され、グルーピングせず個別 PR で人手レビューする",
@@ -24,6 +25,13 @@
     {
       "description": "patch/minor は minimumReleaseAge (7日) 経過後、CI green を条件に自動マージする。major は供給網攻撃対策の猶予期間だけでは不十分なため対象外とし、人手レビューを必須とする",
       "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "lock file maintenance には release timestamp が無く、minimumReleaseAge の判定が常に pending になる。7 日の制約は .npmrc の min-release-age で守る。mise.lock の更新は mise.toml で固定した版の配布物の情報に限られる。CI が green なら自動 merge する",
+      "matchUpdateTypes": ["lockFileMaintenance"],
+      "minimumReleaseAge": null,
       "automerge": true,
       "automergeType": "pr"
     }

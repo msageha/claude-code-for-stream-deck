@@ -7,7 +7,13 @@ Stream Deck plugin for managing [Claude Code](https://claude.ai/code) sessions. 
 > - Permission requests are held open for **24 hours** instead of 120 seconds before auto-denying, so pending requests survive long absences from your desk.
 > - Hook registration is documented as an explicit **manual step** (`npm run hooks:install`). Nothing touches `~/.claude/settings.json` unless you run that command yourself.
 
-<p align="center"><img src="docs/preview.png" alt="agentsd buttons on a Stream Deck" width="320"></p>
+<p align="center">
+  <img
+    src="docs/preview.png"
+    alt="agentsd buttons on a Stream Deck"
+    width="320"
+  >
+</p>
 
 ## Requirements
 

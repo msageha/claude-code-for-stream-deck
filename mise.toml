@@ -2,7 +2,7 @@
 # checksum の再解決は mise-lock.yaml (週次) が行う。
 [tools]
 node = "26.13.0"
-prek = "0.5.7"
+prek = "0.5.9"
 actionlint = "1.7.12"
 dprint = "0.64.3"
 

@@ -1,6 +1,6 @@
 import commonjs from "@rollup/plugin-commonjs";
 import nodeResolve from "@rollup/plugin-node-resolve";
-import typescript from "@rollup/plugin-typescript";
+import sucrase from "@rollup/plugin-sucrase";
 import path from "node:path";
 import url from "node:url";
 
@@ -24,10 +24,9 @@ const config = {
         this.addWatchFile(`${sdPlugin}/manifest.json`);
       },
     },
-    typescript({
-      mapRoot: isWatching ? "./" : undefined,
-    }),
+    sucrase({ transforms: ["typescript"] }),
     nodeResolve({
+      extensions: [".ts", ".mjs", ".js", ".json"],
       browser: false,
       exportConditions: ["node"],
       preferBuiltins: true,

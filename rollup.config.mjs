@@ -1,6 +1,6 @@
 import commonjs from "@rollup/plugin-commonjs";
 import nodeResolve from "@rollup/plugin-node-resolve";
-import typescript from "@rollup/plugin-typescript";
+import { transform } from "esbuild";
 import path from "node:path";
 import url from "node:url";
 
@@ -24,10 +24,23 @@ const config = {
         this.addWatchFile(`${sdPlugin}/manifest.json`);
       },
     },
-    typescript({
-      mapRoot: isWatching ? "./" : undefined,
-    }),
+    {
+      // TypeScript 7 は JS API を持たず @rollup/plugin-typescript が使えない。型検査は tsc --noEmit が担う。
+      // esbuild は ES2022 を target にすると標準 decorator を lower する。
+      name: "esbuild-typescript",
+      async transform(code, id) {
+        if (!id.endsWith(".ts")) return null;
+        const result = await transform(code, {
+          loader: "ts",
+          target: "es2022",
+          sourcefile: id,
+          sourcemap: true,
+        });
+        return { code: result.code, map: result.map };
+      },
+    },
     nodeResolve({
+      extensions: [".ts", ".mjs", ".js", ".json"],
       browser: false,
       exportConditions: ["node"],
       preferBuiltins: true,

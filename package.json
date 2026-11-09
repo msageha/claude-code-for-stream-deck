@@ -33,12 +33,11 @@
     "@elgato/cli": "^1.10.3",
     "@rollup/plugin-commonjs": "^29.0.3",
     "@rollup/plugin-node-resolve": "^16.0.3",
-    "@rollup/plugin-typescript": "^12.3.1",
     "@types/node": "^26.6.6",
     "@vitest/coverage-v8": "^4.1.12",
+    "esbuild": "^0.28.2",
     "rollup": "^4.66.0",
-    "tslib": "^2.8.1",
-    "typescript": "^6.0.2",
+    "typescript": "^7.0.0",
     "vitest": "^4.1.12"
   },
   "allowScripts": {

@@ -18,6 +18,18 @@ export abstract class ManagedAction extends SingletonAction {
     return _manager;
   }
 
+  /**
+   * Visible instances of this action that are keys, which can show a title and an image.
+   * Dials and Neo infobars are skipped.
+   */
+  protected *keyActions() {
+    for (const act of this.actions) {
+      if (act.isKey()) {
+        yield act;
+      }
+    }
+  }
+
   override onWillAppear(_ev: WillAppearEvent): void {
     if (!this.listenersBound && _manager) {
       _manager.on("sessionUpdated", () => this.render());

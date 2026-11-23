@@ -18,7 +18,7 @@ export class ApproveButton extends ManagedAction {
       awaiting ? "#3fb950" : "#555555",
       `<path d="M40 72 L62 94 L104 52" stroke="white" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
     );
-    for (const act of this.actions) {
+    for (const act of this.keyActions()) {
       act.setTitle("Approve");
       act.setImage(icon);
     }

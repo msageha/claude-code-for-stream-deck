@@ -28,7 +28,7 @@ export class SessionDial extends ManagedAction {
           title,
           value: count > 0 ? `${idx + 1}/${count}` : "—",
         });
-      } else {
+      } else if (act.isKey()) {
         act.setTitle(title);
       }
     }

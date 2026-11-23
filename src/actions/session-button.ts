@@ -44,7 +44,7 @@ export class SessionButton extends ManagedAction {
       `${textSvg}</svg>`,
     );
 
-    for (const act of this.actions) {
+    for (const act of this.keyActions()) {
       act.setTitle("");
       act.setImage(image);
     }

@@ -33,7 +33,7 @@ export class ModeButton extends ManagedAction {
     const modeLabel = MODE_LABELS[session?.permissionMode ?? ""] ?? session?.permissionMode ?? "—";
     const modelLabel = session?.model ? shortenModel(session.model) : "";
     const title = modelLabel ? `${modeLabel}\n${modelLabel}` : modeLabel;
-    for (const act of this.actions) {
+    for (const act of this.keyActions()) {
       act.setTitle(title);
     }
   }

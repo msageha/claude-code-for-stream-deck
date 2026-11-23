@@ -19,7 +19,7 @@ export class StopButton extends ManagedAction {
       active ? "#da3633" : "#555555",
       `<rect x="44" y="44" width="56" height="56" rx="8" fill="white"/>`,
     );
-    for (const act of this.actions) {
+    for (const act of this.keyActions()) {
       act.setTitle("Stop");
       act.setImage(icon);
     }

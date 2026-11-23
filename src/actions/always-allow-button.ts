@@ -19,7 +19,7 @@ export class AlwaysAllowButton extends ManagedAction {
       `<path d="M32 72 L48 88 L80 56" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
        <path d="M64 72 L80 88 L112 56" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
     );
-    for (const act of this.actions) {
+    for (const act of this.keyActions()) {
       act.setTitle("Always");
       act.setImage(icon);
     }

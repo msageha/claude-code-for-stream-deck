@@ -15,7 +15,7 @@ export class StatusButton extends ManagedAction {
   protected render(): void {
     const session = this.manager?.activeSession;
     if (!session) {
-      for (const act of this.actions) act.setTitle("—");
+      for (const act of this.keyActions()) act.setTitle("—");
       return;
     }
 
@@ -50,7 +50,7 @@ export class StatusButton extends ManagedAction {
     const errorColor = session.state === State.IDLE && session.lastError ? "#da3633" : null;
     const color = errorColor ?? agentColor(session.activeWork);
 
-    for (const act of this.actions) {
+    for (const act of this.keyActions()) {
       act.setTitle(text);
       act.setImage(color ? iconButton(color, "") : undefined);
     }

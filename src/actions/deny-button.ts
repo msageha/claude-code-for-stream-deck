@@ -18,7 +18,7 @@ export class DenyButton extends ManagedAction {
       awaiting ? "#da3633" : "#555555",
       `<path d="M44 44 L100 100 M100 44 L44 100" stroke="white" stroke-width="10" stroke-linecap="round"/>`,
     );
-    for (const act of this.actions) {
+    for (const act of this.keyActions()) {
       act.setTitle("Deny");
       act.setImage(icon);
     }
